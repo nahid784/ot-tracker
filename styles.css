@@ -1,0 +1,183 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+header {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  color: white;
+  padding: 30px 40px;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+
+header p {
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.controls {
+  padding: 30px 40px;
+  display: flex;
+  gap: 25px;
+  align-items: end;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.input-group {
+  flex: 1;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #334155;
+}
+
+#basic {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+}
+
+#basic:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.upload-area {
+  flex: 2;
+  border: 3px dashed #94a3b8;
+  border-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: white;
+}
+
+.upload-area:hover {
+  border-color: #3b82f6;
+  background: #f0f9ff;
+}
+
+.upload-area i {
+  font-size: 3.5rem;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.upload-area p {
+  font-size: 1.1rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.result {
+  padding: 40px;
+  min-height: 300px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: white;
+}
+
+th, td {
+  padding: 16px 12px;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+  background: #1e40af;
+  color: white;
+  font-weight: 600;
+}
+
+tr:hover {
+  background: #f8fafc;
+}
+
+.total-card {
+  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  color: white;
+  padding: 25px;
+  border-radius: 16px;
+  margin: 25px 0;
+  text-align: center;
+}
+
+.total-card h2 {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.total-amount {
+  font-size: 2.8rem;
+  font-weight: bold;
+}
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+th {
+  background: #1e40af;
+  color: white;
+  font-weight: 600;
+}
+
+td {
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  
+}
