@@ -1,5 +1,6 @@
 let basicSalary = 10000;
 let currentOTDays = [];
+let editingIndex = -1;
 
 document.getElementById('basic').addEventListener('input', (e) => {
   basicSalary = parseFloat(e.target.value) || 10000;
@@ -19,7 +20,6 @@ fileInput.addEventListener('change', (e) => {
 
 function processFile(file) {
   const reader = new FileReader();
-  
   reader.onload = function(e) {
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data, { type: 'array' });
@@ -42,15 +42,12 @@ function processFile(file) {
       let dayType = '';
 
       if (completedRaw >= 12) {
-        // Normal Working Day OT
         const extra = totalHours - 9;
         const breaks = (totalHours >= 16) ? 1.0 : 0.5;
         payableOT = Math.max(0, extra - breaks);
         dayType = 'Normal OT';
-      } 
-      else if (status.includes('HOLIDAY') && inTime !== 'N/A' && outTime !== 'N/A') {
-        // Holiday Overtime
-        payableOT = Math.max(0, totalHours - 1.0);   // 1 hour total break
+      } else if (status.includes('HOLIDAY') && inTime !== 'N/A' && outTime !== 'N/A') {
+        payableOT = Math.max(0, totalHours - 1.0);
         dayType = 'Holiday OT';
       }
 
@@ -69,13 +66,118 @@ function processFile(file) {
 
     renderResult();
   };
-
   reader.readAsArrayBuffer(file);
 }
 
-function deleteDay(index) {
-  currentOTDays.splice(index, 1);
+// === SUPER ROBUST TIME CALCULATOR ===
+function calculateHours(inTimeStr, outTimeStr) {
+  if (!inTimeStr || !outTimeStr || inTimeStr === 'N/A' || outTimeStr === 'N/A') return 0;
+
+  try {
+    // Remove date part if present (e.g., "30-APR-26 06:49:25 AM" → "06:49:25 AM")
+    inTimeStr = inTimeStr.toString().split(' ').slice(-2).join(' ').trim();
+    outTimeStr = outTimeStr.toString().split(' ').slice(-2).join(' ').trim();
+
+    const inDate = parseFlexibleTime(inTimeStr);
+    const outDate = parseFlexibleTime(outTimeStr);
+
+    if (!inDate || !outDate) return 0;
+
+    let diff = (outDate - inDate) / (1000 * 60 * 60);
+
+    if (diff < 0) diff += 24;
+
+    return parseFloat(diff.toFixed(2));
+  } catch (e) {
+    console.error("Time calculation failed:", e);
+    return 0;
+  }
+}
+
+function parseFlexibleTime(timeStr) {
+  if (!timeStr) return null;
+  timeStr = timeStr.trim();
+
+  const testDate = new Date(`1970-01-01 ${timeStr}`);
+  if (!isNaN(testDate.getTime())) return testDate;
+
+  // Try without seconds
+  const withoutSec = timeStr.replace(/:\d{2}\s*(AM|PM)/i, ' $1');
+  const test2 = new Date(`1970-01-01 ${withoutSec}`);
+  if (!isNaN(test2.getTime())) return test2;
+
+  return null;
+}
+
+function editDay(index) {
+  editingIndex = index;
+  const day = currentOTDays[index];
+
+  const modalHTML = `
+    <div class="modal" id="editModal" style="display:flex;">
+      <div class="modal-content">
+        <h2>Edit Day: ${day.date}</h2>
+        
+        <div class="modal-label">Check In Time</div>
+        <input type="text" id="editInTime" class="modal-input" value="${day.inTime}" placeholder="06:49:25 AM">
+
+        <div class="modal-label">Check Out Time</div>
+        <input type="text" id="editOutTime" class="modal-input" value="${day.outTime}" placeholder="07:04:20 PM">
+
+        <small style="color:#64748b;">Example: 06:49:25 AM or 7:04 PM</small>
+
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+          <button class="save-btn" onclick="saveEdit()">Save & Recalculate</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('result').insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeModal() {
+  const modal = document.getElementById('editModal');
+  if (modal) modal.remove();
+  editingIndex = -1;
+}
+
+function saveEdit() {
+  if (editingIndex === -1) return;
+
+  const newInTime = document.getElementById('editInTime').value.trim();
+  const newOutTime = document.getElementById('editOutTime').value.trim();
+
+  const day = currentOTDays[editingIndex];
+
+  day.inTime = newInTime || 'N/A';
+  day.outTime = newOutTime || 'N/A';
+
+  if (newInTime && newOutTime && newInTime !== 'N/A' && newOutTime !== 'N/A') {
+    const calculatedHours = calculateHours(newInTime, newOutTime);
+    
+    day.completed = calculatedHours.toFixed(2);
+    day.totalHours = Math.floor(calculatedHours);
+
+    if (day.dayType === 'Normal OT') {
+      const extra = day.totalHours - 9;
+      const breaks = (day.totalHours >= 16) ? 1.0 : 0.5;
+      day.payableOT = Math.max(0, extra - breaks);
+    } else if (day.dayType === 'Holiday OT') {
+      day.payableOT = Math.max(0, day.totalHours - 1.0);
+    }
+  }
+
+  closeModal();
   renderResult();
+}
+
+function deleteDay(index) {
+  if (confirm("Delete this day?")) {
+    currentOTDays.splice(index, 1);
+    renderResult();
+  }
 }
 
 function renderResult() {
@@ -123,6 +225,9 @@ function renderResult() {
           <td>${day.totalHours}</td>
           <td><strong style="color:#10b981;">${day.payableOT.toFixed(1)}</strong></td>
           <td>
+            <button onclick="editDay(${index})" style="background:#3b82f6; color:white; border:none; padding:6px 12px; border-radius:8px; margin-right:5px; cursor:pointer;">
+              <i class="fas fa-edit"></i> Edit
+            </button>
             <button class="delete-btn" onclick="deleteDay(${index})">
               <i class="fas fa-trash"></i>
             </button>
